@@ -12,10 +12,26 @@ namespace RegistroPrestamo.BLL
     {
         public static bool Guardar(Prestamo prestamo)
         {
+            Persona persona = new Persona();
+            Contexto contexto = new Contexto();
+
+            try
+            {
+                persona = contexto.Persona.Find(prestamo.PersonaId);
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                contexto.Dispose();
+            }
+
             if(!Existe(prestamo.PrestamoId))
-                return Insertar(prestamo);
+                return Insertar(prestamo,persona);
             else
-                return Modificar(prestamo);
+                return Modificar(prestamo,persona);
             
         }
 
@@ -39,14 +55,18 @@ namespace RegistroPrestamo.BLL
             return encontrado;
         }
 
-        private static bool Insertar(Prestamo prestamo)
+        private static bool Insertar(Prestamo prestamo,Persona persona)
         {
             Contexto contexto = new Contexto();
             bool insertado = false;
 
             try
             {
+                prestamo.Balance = prestamo.Balance + prestamo.Monto;
                 contexto.Prestamo.Add(prestamo);
+
+                persona.Balance = prestamo.Balance;
+                contexto.Persona.Add(persona);
                 insertado = (contexto.SaveChanges() > 0);
             }
             catch(Exception)
@@ -60,14 +80,18 @@ namespace RegistroPrestamo.BLL
             return insertado;
         }
 
-        private static bool Modificar(Prestamo prestamo)
+        private static bool Modificar(Prestamo prestamo, Persona persona)
         {
             Contexto contexto = new Contexto();
             bool modificado = false;
 
             try
             {
+                prestamo.Balance = prestamo.Balance + prestamo.Monto;
                 contexto.Entry(prestamo).State = EntityState.Modified;
+
+                persona.Balance = prestamo.Balance;
+                contexto.Entry(persona).State = EntityState.Modified;
                 modificado = (contexto.SaveChanges() > 0);
             }
             catch(Exception)
