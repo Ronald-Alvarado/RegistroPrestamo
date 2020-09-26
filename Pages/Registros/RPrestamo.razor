@@ -31,7 +31,13 @@
 
 				<div class="form-group">
 					<label>PersonaId</label>
-					<InputNumber @bind-Value="prestamo.PersonaId" class="form-control"/>
+					<select @bind="PersonaSeleccionada" class="form-control" @onfocusout="ObtenerBalance">
+                        <option value="0" disabled selected>Seleccionar persona</option>
+                        @foreach (var item in ListaPersonas)
+                        {
+                            <option value="@item.PersonaId">@item.PersonaId</option>
+                        }
+                    </select>
                     <ValidationMessage For="@(() => prestamo.PersonaId)"/>
 				</div>
 
@@ -71,7 +77,11 @@
 </EditForm>
 
 @code{
-   private Prestamo prestamo = new Prestamo();
+    private Prestamo prestamo = new Prestamo();
+
+    public int PersonaSeleccionada { get; set; }
+
+    List<Persona> ListaPersonas = new List<Persona>();
 
     [Parameter] public int PrestamoId { get; set; }
 
@@ -80,9 +90,21 @@
         Nuevo();
     }
 
+    private void ObtenerBalance()
+    {
+        Persona persona = PersonaBLL.Buscar(PersonaSeleccionada);
+
+        if (persona != null)
+        {
+            prestamo.PersonaId = persona.PersonaId;
+            prestamo.Balance = persona.Balance;
+        }
+    }
+
     private void Nuevo()
     {
         prestamo = new Prestamo();
+        ListaPersonas = PersonaBLL.GetList(c => true);
     }
 
     private void Guardar()
